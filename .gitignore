@@ -40,6 +40,7 @@ crash.log
 
 # Terraform plans
 *.tfplan
+tfplan
 
 # Local vars
 terraform.tfvars
@@ -47,9 +48,6 @@ terraform.tfvars
 
 # IntelliJ
 .idea/
-
-# Build
-target/
 
 # OS
 .DS_Store
