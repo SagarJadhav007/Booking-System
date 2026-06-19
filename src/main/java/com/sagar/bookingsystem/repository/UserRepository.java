@@ -1,0 +1,8 @@
+package com.sagar.bookingsystem.repository;
+
+import com.sagar.bookingsystem.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRepository
+        extends JpaRepository<User, String> {
+}

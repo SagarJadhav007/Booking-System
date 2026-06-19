@@ -1,0 +1,6 @@
+.idea/
+.git/
+.gitignore
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup
