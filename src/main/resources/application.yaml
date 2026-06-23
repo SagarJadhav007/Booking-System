@@ -32,3 +32,16 @@ management:
   endpoint:
     health:
       show-details: always
+
+jwt:
+  secret: my-super-secret-key-for-jwt-authentication-booking-system
+  expiration: 86400000
+
+aws:
+  region: ap-south-1
+
+  sqs:
+    booking-queue-url: ${BOOKING_QUEUE_URL:}
+
+  ses:
+    sender-email: ${SES_SENDER_EMAIL:}

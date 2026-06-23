@@ -19,11 +19,15 @@ public class Booking {
     @Id
     private String bookingId;
 
+    private String eventId;
+
     private String seatId;
 
     private String userId;
 
     private String paymentId;
+
+    private Double amount;
 
     private Instant bookedAt;
 }

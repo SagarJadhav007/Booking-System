@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.UUID;
+import com.sagar.bookingsystem.util.SecurityUtils;
+import com.sagar.bookingsystem.dto.sqs.BookingCreatedEvent;
+import com.sagar.bookingsystem.service.event.BookingEventPublisher;
 
 @Service
 @RequiredArgsConstructor
@@ -36,9 +39,15 @@ public class PaymentService {
     private final RedisSeatHoldService
             redisSeatHoldService;
 
+    private final BookingEventPublisher
+            bookingEventPublisher;
+
     public void startPayment(
             StartPaymentRequest request
     ) {
+
+        String email =
+                SecurityUtils.getCurrentUserEmail();
 
         SeatHold hold =
                 redisSeatHoldService.getHold(
@@ -53,7 +62,7 @@ public class PaymentService {
         }
 
         if (!hold.getUserId().equals(
-                request.userId()
+                email
         )) {
 
             throw new RuntimeException(
@@ -75,6 +84,9 @@ public class PaymentService {
     public void confirmPayment(
             ConfirmPaymentRequest request
     ) {
+
+        String email =
+                SecurityUtils.getCurrentUserEmail();
 
         if (paymentTransactionRepository.existsById(
                 request.idempotencyKey()
@@ -100,7 +112,7 @@ public class PaymentService {
         }
 
         if (!hold.getUserId().equals(
-                request.userId()
+                email
         )) {
 
             throw new RuntimeException(
@@ -117,10 +129,21 @@ public class PaymentService {
             );
         }
 
+        Seat seat =
+                seatRepository
+                        .findBySeatId(
+                                request.seatId()
+                        )
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Seat not found"
+                                )
+                        );
+
         PaymentGatewayResponse gatewayResponse =
                 paymentGateway.processPayment(
                         request.paymentId(),
-                        500.0
+                        seat.getPrice()
                 );
 
         if (!gatewayResponse.success()) {
@@ -137,7 +160,9 @@ public class PaymentService {
                             .seatId(
                                     request.seatId()
                             )
-                            .amount(500.0)
+                            .amount(
+                                    seat.getPrice()
+                            )
                             .createdAt(
                                     Instant.now()
                             )
@@ -157,14 +182,20 @@ public class PaymentService {
                                 UUID.randomUUID()
                                         .toString()
                         )
+                        .eventId(
+                                seat.getEventId()
+                        )
                         .seatId(
-                                request.seatId()
+                                seat.getSeatId()
                         )
                         .userId(
-                                request.userId()
+                                email
                         )
                         .paymentId(
                                 request.paymentId()
+                        )
+                        .amount(
+                                seat.getPrice()
                         )
                         .bookedAt(
                                 Instant.now()
@@ -174,11 +205,32 @@ public class PaymentService {
         bookingRepository.save(
                 booking
         );
+        bookingEventPublisher.publish(
 
-        Seat seat =
-                seatRepository.findBySeatId(
-                        request.seatId()
-                ).orElseThrow();
+                BookingCreatedEvent.builder()
+
+                        .bookingId(
+                                booking.getBookingId()
+                        )
+
+                        .eventId(
+                                booking.getEventId()
+                        )
+
+                        .seatId(
+                                booking.getSeatId()
+                        )
+
+                        .userEmail(
+                                email
+                        )
+
+                        .amount(
+                                booking.getAmount()
+                        )
+
+                        .build()
+        );
 
         seat.setStatus(
                 SeatStatus.CONFIRMED
@@ -200,7 +252,9 @@ public class PaymentService {
                         .seatId(
                                 request.seatId()
                         )
-                        .amount(500.0)
+                        .amount(
+                                seat.getPrice()
+                        )
                         .createdAt(
                                 Instant.now()
                         )

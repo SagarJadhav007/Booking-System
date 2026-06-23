@@ -19,9 +19,15 @@ public class Event {
     @Id
     private String eventId;
 
-    private String name;
+    private String eventName;
+
+    private String description;
 
     private String venue;
 
     private Instant eventDate;
+
+    private Integer totalSeats;
+
+    private Boolean active;
 }

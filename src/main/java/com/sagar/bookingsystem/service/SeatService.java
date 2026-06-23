@@ -8,6 +8,7 @@ import com.sagar.bookingsystem.repository.SeatRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import com.sagar.bookingsystem.util.SecurityUtils;
 
 @Service
 @RequiredArgsConstructor
@@ -39,10 +40,13 @@ public class SeatService {
             );
         }
 
+        String email =
+                SecurityUtils.getCurrentUserEmail();
+
         boolean acquired =
                 redisSeatHoldService.tryCreateHold(
                         request.getSeatId(),
-                        request.getUserId()
+                        email
                 );
 
         if (!acquired) {

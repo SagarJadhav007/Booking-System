@@ -32,3 +32,13 @@ output "alb_dns_name" {
 
   value = aws_lb.main.dns_name
 }
+
+output "booking_queue_url" {
+
+  value = aws_sqs_queue.booking_queue.id
+}
+
+output "cloudfront_url" {
+
+  value = aws_cloudfront_distribution.frontend.domain_name
+}

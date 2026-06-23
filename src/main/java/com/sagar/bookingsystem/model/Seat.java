@@ -15,6 +15,12 @@ public class Seat {
     @Id
     private String seatId;
 
+    private String seatNumber;
+
+    private String rowNumber;
+
+    private Double price;
+
     private String eventId;
 
     @Enumerated(EnumType.STRING)

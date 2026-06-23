@@ -1,11 +1,13 @@
 package com.sagar.bookingsystem.controller;
 
 import com.sagar.bookingsystem.dto.ReserveSeatRequest;
+import com.sagar.bookingsystem.dto.SeatResponse;
 import com.sagar.bookingsystem.model.Seat;
 import com.sagar.bookingsystem.dto.SeatHold;
 import com.sagar.bookingsystem.repository.SeatRepository;
 import com.sagar.bookingsystem.service.RedisSeatHoldService;
 import com.sagar.bookingsystem.service.SeatService;
+import com.sagar.bookingsystem.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +21,6 @@ public class SeatController {
     private final SeatRepository seatRepository;
     private final SeatService seatService;
     private final RedisSeatHoldService redisSeatHoldService;
-
-    @GetMapping
-    public List<Seat> getSeats() {
-        return seatRepository.findByEventId("EVENT_1");
-    }
 
     @PostMapping("/reserve")
     public String reserveSeat(

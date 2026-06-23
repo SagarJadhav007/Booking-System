@@ -42,6 +42,16 @@ resource "aws_ecs_task_definition" "app" {
       environment = [
 
         {
+          name  = "AWS_REGION"
+          value = var.aws_region
+        },
+
+        {
+          name  = "BOOKING_QUEUE_URL"
+          value = aws_sqs_queue.booking_queue.url
+        },
+
+        {
           name = "DB_URL"
 
           value = "jdbc:postgresql://${aws_db_instance.postgres.address}:5432/bookingdb"
@@ -61,6 +71,11 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "JAVA_TOOL_OPTIONS"
           value = "-XX:+UseContainerSupport -Xms256m -Xmx768m"
+        },
+
+        {
+          name  = "SES_SENDER_EMAIL"
+          value = "jadhavsagar1505@gmail.com"
         }
       ]
 

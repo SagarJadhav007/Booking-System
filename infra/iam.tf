@@ -52,6 +52,24 @@ resource "aws_iam_role_policy" "secrets_access" {
 
           aws_secretsmanager_secret.db_password.arn
         ]
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "sqs:SendMessage",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes"
+        ],
+        "Resource": "*"
       }
     ]
   })

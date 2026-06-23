@@ -1,8 +1,6 @@
 package com.sagar.bookingsystem.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -17,7 +15,12 @@ public class User {
     @Id
     private String userId;
 
-    private String name;
+    private String username;
 
     private String email;
+
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
 }

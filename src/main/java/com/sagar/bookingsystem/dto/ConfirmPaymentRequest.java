@@ -4,8 +4,6 @@ public record ConfirmPaymentRequest(
 
         String seatId,
 
-        String userId,
-
         String paymentId,
 
         String idempotencyKey

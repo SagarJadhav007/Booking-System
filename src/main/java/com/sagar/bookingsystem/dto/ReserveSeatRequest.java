@@ -11,7 +11,4 @@ public class ReserveSeatRequest {
 
     @NotBlank
     private String seatId;
-
-    @NotBlank
-    private String userId;
 }

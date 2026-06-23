@@ -52,3 +52,17 @@ terraform.tfvars
 # OS
 .DS_Store
 Thumbs.db
+
+# Terraform
+**/.terraform/
+.terraform.lock.hcl
+
+# Build
+*.jar
+
+# Archives
+*.zip
+
+# Env
+.env
+.env.*
