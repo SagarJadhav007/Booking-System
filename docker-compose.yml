@@ -36,10 +36,13 @@ services:
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/bookingdb
       DB_USERNAME: bookinguser
-      DB_PASSWORD: bookingpass
+      DB_PASSWORD: BookingPassword123!
 
       REDIS_HOST: redis
       REDIS_PORT: 6379
+
+    volumes:
+      - ./src/main/resources/application.yaml:/app/application.yaml
 
 volumes:
 

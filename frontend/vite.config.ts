@@ -11,6 +11,21 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "react-router-dom": path.resolve(__dirname, "./src/vendor/react-router-dom.ts"),
+      "react-router": path.resolve(__dirname, "./node_modules/react-router/dist/development/index.js"),
+    },
+  },
+  optimizeDeps: {
+    include: ["react-router"],
+    needsInterop: ["react-router"],
+  },
+  server: {
+    port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
+      },
     },
   },
 });

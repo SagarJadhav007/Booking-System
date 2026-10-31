@@ -25,13 +25,21 @@ public class SqsBookingEventPublisher
 
     private final ObjectMapper objectMapper;
 
-    @Value("${aws.sqs.booking-queue-url}")
+    @Value("${aws.sqs.booking-queue-url:}")
     private String queueUrl;
 
     @Override
     public void publish(
             BookingCreatedEvent event
     ) {
+
+        if (queueUrl == null || queueUrl.isBlank()) {
+            System.out.println(
+                    "LOCAL BOOKING EVENT (no queueUrl) => "
+                            + event.getBookingId()
+            );
+            return;
+        }
 
         try {
 
@@ -64,9 +72,9 @@ public class SqsBookingEventPublisher
 
         } catch (Exception e) {
 
-            throw new RuntimeException(
-                    "Failed to publish SQS message",
-                    e
+            System.out.println(
+                    "Notice: SQS unavailable in demo mode, logged event locally: "
+                            + event.getBookingId()
             );
         }
     }

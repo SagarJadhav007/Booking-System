@@ -1,265 +1,256 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+    ArrowLeft,
+    MapPin,
+    Plus,
+    Sparkles,
+    Ticket,
+} from "lucide-react";
 
 import api from "../../api/axios";
-
-import {
-    Card,
-    CardContent
-} from "@/components/ui/card";
-
-import {
-    Input
-} from "@/components/ui/input";
-
-import {
-    Label
-} from "@/components/ui/label";
-
-import {
-    Button
-} from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { PageContainer, PageHeader, PageShell } from "@/components/layout/PageShell";
+import { FadeIn } from "@/components/motion/FadeIn";
+import { useToast } from "@/components/ui/toast";
 
 const CreateEventPage = () => {
+    const navigate = useNavigate();
+    const toast = useToast();
+    const [eventName, setEventName] = useState("");
+    const [description, setDescription] = useState("");
+    const [venue, setVenue] = useState("");
+    const [eventDate, setEventDate] = useState("");
+    const [rows, setRows] = useState(5);
+    const [seatsPerRow, setSeatsPerRow] = useState(10);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
-    const navigate =
-        useNavigate();
+    const totalSeats = rows * seatsPerRow;
 
-    const [eventName, setEventName] =
-        useState("");
+    const handleCreate = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setError("");
 
-    const [description, setDescription] =
-        useState("");
+        if (!eventName.trim() || !venue.trim() || !eventDate) {
+            setError("Event name, venue, and date/time are required.");
+            return;
+        }
 
-    const [venue, setVenue] =
-        useState("");
+        if (rows < 1 || seatsPerRow < 1) {
+            setError("Rows and seats per row must each be at least 1.");
+            return;
+        }
 
-    const [eventDate, setEventDate] =
-        useState("");
-
-    const [rows, setRows] =
-        useState(5);
-
-    const [seatsPerRow, setSeatsPerRow] =
-        useState(10);
-
-    const [loading, setLoading] =
-        useState(false);
-
-    const handleCreate =
-        async (
-            e: React.FormEvent
-        ) => {
-
-            e.preventDefault();
-
-            try {
-
-                setLoading(true);
-
-                await api.post(
-                    "/events",
-                    {
-                        eventName,
-                        description,
-                        venue,
-
-                        eventDate:
-                            new Date(
-                                eventDate
-                            ).toISOString(),
-
-                        rows,
-                        seatsPerRow
-                    }
-                );
-
-                console.log({
-                    eventName,
-                    description,
-                    venue,
-                    eventDate:
-                        new Date(
-                            eventDate
-                        ).toISOString(),
-                    rows,
-                    seatsPerRow
-                });
-
-                alert(
-                    "Event Created Successfully"
-                );
-
-                navigate(
-                    "/events"
-                );
-
-            } catch (error) {
-
-                console.error(error);
-
-                alert(
-                    "Failed to create event"
-                );
-
-            } finally {
-
-                setLoading(false);
-            }
-        };
+        try {
+            setLoading(true);
+            await api.post("/events", {
+                eventName: eventName.trim(),
+                description: description.trim(),
+                venue: venue.trim(),
+                eventDate: new Date(eventDate).toISOString(),
+                rows: Number(rows),
+                seatsPerRow: Number(seatsPerRow),
+            });
+            toast.success("Event created successfully with full seating configuration");
+            navigate("/admin");
+        } catch (createError) {
+            console.error(createError);
+            setError("Failed to create event. Please ensure the backend is running.");
+            toast.error("Failed to create event");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
+        <PageShell>
+            <PageContainer className="max-w-3xl pb-20">
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mb-4 -ml-2 text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => navigate("/admin")}
+                >
+                    <ArrowLeft className="mr-1.5 size-3.5" />
+                    Back to Admin Dashboard
+                </Button>
 
-        <div className="min-h-screen bg-slate-50 p-8">
+                <FadeIn>
+                    <PageHeader
+                        eyebrow="Event Management"
+                        title="Create New Event"
+                        description="Publish a live event and automatically generate the tiered seating layout."
+                    />
+                </FadeIn>
 
-            <div className="max-w-2xl mx-auto">
+                <div className="rounded-2xl border border-white/10 bg-[#12151b] p-6 sm:p-10 shadow-2xl">
+                    <form onSubmit={handleCreate} className="space-y-8">
+                        {/* Section 1: Event Details */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 border-b border-white/[0.08] pb-2">
+                                <Sparkles className="size-4 text-primary" />
+                                <h2 className="text-xs font-semibold tracking-wider text-white uppercase">
+                                    General Information
+                                </h2>
+                            </div>
 
-                <Card>
-
-                    <CardContent className="p-8">
-
-                        <h1 className="text-3xl font-bold mb-6">
-                            Create Event
-                        </h1>
-
-                        <form
-                            onSubmit={handleCreate}
-                            className="space-y-5"
-                        >
-
-                            <div>
-
-                                <Label>
-                                    Event Name
+                            <div className="space-y-1.5">
+                                <Label htmlFor="eventName" className="text-xs font-medium text-foreground">
+                                    Event Name *
                                 </Label>
-
                                 <Input
+                                    id="eventName"
+                                    placeholder="e.g. Symphony of the Cosmos 2026"
                                     value={eventName}
-                                    onChange={(e) =>
-                                        setEventName(
-                                            e.target.value
-                                        )
-                                    }
+                                    onChange={(e) => setEventName(e.target.value)}
+                                    className="h-10 border-white/10 bg-[#0b0d10] text-xs focus-visible:border-primary"
                                 />
-
                             </div>
 
-                            <div>
-
-                                <Label>
-                                    Description
+                            <div className="space-y-1.5">
+                                <Label htmlFor="description" className="text-xs font-medium text-foreground">
+                                    Event Description
                                 </Label>
-
-                                <Input
+                                <Textarea
+                                    id="description"
+                                    placeholder="Provide event details, performer info, schedule, and guidelines for attendees..."
+                                    rows={4}
                                     value={description}
-                                    onChange={(e) =>
-                                        setDescription(
-                                            e.target.value
-                                        )
-                                    }
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="border-white/10 bg-[#0b0d10] text-xs focus-visible:border-primary"
                                 />
+                            </div>
+                        </div>
 
+                        {/* Section 2: Venue & Schedule */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 border-b border-white/[0.08] pb-2">
+                                <MapPin className="size-4 text-primary" />
+                                <h2 className="text-xs font-semibold tracking-wider text-white uppercase">
+                                    Schedule & Location
+                                </h2>
                             </div>
 
-                            <div>
-
-                                <Label>
-                                    Venue
-                                </Label>
-
-                                <Input
-                                    value={venue}
-                                    onChange={(e) =>
-                                        setVenue(
-                                            e.target.value
-                                        )
-                                    }
-                                />
-
-                            </div>
-
-                            <div>
-
-                                <Label>
-                                    Event Date
-                                </Label>
-
-                                <Input
-                                    type="datetime-local"
-                                    value={eventDate}
-                                    onChange={(e) =>
-                                        setEventDate(
-                                            e.target.value
-                                        )
-                                    }
-                                />
-
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-
-                                <div>
-
-                                    <Label>
-                                        Rows
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="venue" className="text-xs font-medium text-foreground">
+                                        Venue Name *
                                     </Label>
-
                                     <Input
-                                        type="number"
-                                        value={rows}
-                                        onChange={(e) =>
-                                            setRows(
-                                                Number(
-                                                    e.target.value
-                                                )
-                                            )
-                                        }
+                                        id="venue"
+                                        placeholder="e.g. Royal Grand Theatre, Mumbai"
+                                        value={venue}
+                                        onChange={(e) => setVenue(e.target.value)}
+                                        className="h-10 border-white/10 bg-[#0b0d10] text-xs focus-visible:border-primary"
                                     />
-
                                 </div>
 
-                                <div>
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="eventDate" className="text-xs font-medium text-foreground">
+                                        Date & Time *
+                                    </Label>
+                                    <Input
+                                        id="eventDate"
+                                        type="datetime-local"
+                                        value={eventDate}
+                                        onChange={(e) => setEventDate(e.target.value)}
+                                        className="h-10 border-white/10 bg-[#0b0d10] text-xs focus-visible:border-primary"
+                                    />
+                                </div>
+                            </div>
+                        </div>
 
-                                    <Label>
+                        {/* Section 3: Seating Configuration */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2 border-b border-white/[0.08] pb-2">
+                                <Ticket className="size-4 text-primary" />
+                                <h2 className="text-xs font-semibold tracking-wider text-white uppercase">
+                                    Seating Layout Configuration
+                                </h2>
+                            </div>
+
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="rows" className="text-xs font-medium text-foreground">
+                                        Number of Rows
+                                    </Label>
+                                    <Input
+                                        id="rows"
+                                        type="number"
+                                        min={1}
+                                        max={26}
+                                        value={rows}
+                                        onChange={(e) => setRows(Number(e.target.value))}
+                                        className="h-10 border-white/10 bg-[#0b0d10] text-xs focus-visible:border-primary"
+                                    />
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Rows will be labeled alphabetically (A, B, C...).
+                                    </p>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="seatsPerRow" className="text-xs font-medium text-foreground">
                                         Seats Per Row
                                     </Label>
-
                                     <Input
+                                        id="seatsPerRow"
                                         type="number"
+                                        min={1}
+                                        max={30}
                                         value={seatsPerRow}
-                                        onChange={(e) =>
-                                            setSeatsPerRow(
-                                                Number(
-                                                    e.target.value
-                                                )
-                                            )
-                                        }
+                                        onChange={(e) => setSeatsPerRow(Number(e.target.value))}
+                                        className="h-10 border-white/10 bg-[#0b0d10] text-xs focus-visible:border-primary"
                                     />
-
+                                    <p className="text-[11px] text-muted-foreground">
+                                        Seats will be numbered sequentially (1, 2, 3...).
+                                    </p>
                                 </div>
-
                             </div>
 
+                            {/* Live Seat Calculation Preview */}
+                            <div className="flex items-center justify-between rounded-xl border border-white/[0.06] bg-[#0b0d10] p-4 text-xs">
+                                <span className="text-muted-foreground">
+                                    Calculated Total Seating Capacity:
+                                </span>
+                                <span className="font-mono text-sm font-bold text-primary">
+                                    {totalSeats} Seats ({rows} rows × {seatsPerRow} seats)
+                                </span>
+                            </div>
+                        </div>
+
+                        {error && (
+                            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+                                {error}
+                            </div>
+                        )}
+
+                        <div className="flex items-center justify-end gap-3 border-t border-white/[0.08] pt-6">
                             <Button
-                                className="w-full"
+                                type="button"
+                                variant="outline"
+                                onClick={() => navigate("/admin")}
+                                className="h-10 text-xs"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                size="lg"
+                                className="h-10 gap-2 text-xs font-semibold shadow-[0_2px_15px_rgb(124_108_255_/_0.35)]"
                                 disabled={loading}
                             >
-                                {
-                                    loading
-                                        ? "Creating..."
-                                        : "Create Event"
-                                }
+                                <Plus className="size-4" />
+                                {loading ? "Publishing Event..." : "Publish Event"}
                             </Button>
-
-                        </form>
-
-                    </CardContent>
-
-                </Card>
-
-            </div>
-
-        </div>
+                        </div>
+                    </form>
+                </div>
+            </PageContainer>
+        </PageShell>
     );
 };
 

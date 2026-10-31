@@ -13,6 +13,8 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.model.*;
 import com.sagar.bookingsystem.service.email.EmailService;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @ConditionalOnProperty(
@@ -26,13 +28,17 @@ public class BookingEventConsumer {
 
     private final EmailService emailService;
 
-    @Value("${aws.sqs.booking-queue-url}")
+    @Value("${aws.sqs.booking-queue-url:}")
     private String queueUrl;
 
     @Scheduled(
             fixedDelay = 5000
     )
     public void pollMessages() {
+
+        if (queueUrl == null || queueUrl.isBlank()) {
+            return;
+        }
 
         try {
 
@@ -55,61 +61,54 @@ public class BookingEventConsumer {
 
                             .build();
 
-            ReceiveMessageResponse response =
-                    sqsClient.receiveMessage(
-                            request
-                    );
+            List<Message> messages =
+                    sqsClient
+                            .receiveMessage(
+                                    request
+                            )
+                            .messages();
 
-            for (Message message :
-                    response.messages()) {
+            for (
+                    Message message :
+                    messages
+            ) {
 
                 BookingCreatedEvent event =
+                        objectMapper
+                                .readValue(
+                                        message.body(),
+                                        BookingCreatedEvent.class
+                                );
 
-                        objectMapper.readValue(
-
-                                message.body(),
-
-                                BookingCreatedEvent.class
+                emailService
+                        .sendBookingConfirmation(
+                                event
                         );
 
-                processEvent(
-                        event
-                );
+                sqsClient
+                        .deleteMessage(
 
-                sqsClient.deleteMessage(
+                                DeleteMessageRequest
+                                        .builder()
 
-                        DeleteMessageRequest
-                                .builder()
+                                        .queueUrl(
+                                                queueUrl
+                                        )
 
-                                .queueUrl(
-                                        queueUrl
-                                )
+                                        .receiptHandle(
+                                                message.receiptHandle()
+                                        )
 
-                                .receiptHandle(
-                                        message.receiptHandle()
-                                )
-
-                                .build()
-                );
+                                        .build()
+                        );
             }
 
         } catch (Exception e) {
 
-            e.printStackTrace();
+            System.out.println(
+                    "Error processing message: "
+                            + e.getMessage()
+            );
         }
-    }
-
-    private void processEvent(
-            BookingCreatedEvent event
-    ) {
-
-        System.out.println(
-                "BOOKING CONSUMED => "
-                        + event.getBookingId()
-        );
-
-        emailService.sendBookingConfirmation(
-                event
-        );
     }
 }

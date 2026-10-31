@@ -1,129 +1,56 @@
 import type { Seat } from "../../types/seat";
+import { formatCurrency } from "@/lib/format";
+import { isOwnedHold, isSeatHeldByOthers } from "@/lib/seats";
+import { cn } from "@/lib/utils";
 
 interface Props {
     seat: Seat;
+    selected: boolean;
     onClick: (seat: Seat) => void;
 }
 
-const SeatCard = ({
-                      seat,
-                      onClick
-                  }: Props) => {
+const SeatCard = ({ seat, selected, onClick }: Props) => {
+    const heldByOthers = isSeatHeldByOthers(seat);
+    const occupied = seat.status === "CONFIRMED" || heldByOthers;
+    const yours = isOwnedHold(seat);
 
-    const disabled =
+    let label = "Available";
+    let seatClass = "seat-available";
 
-        seat.status === "CONFIRMED"
-
-        ||
-
-        (
-            seat.status === "HELD"
-            &&
-            !seat.ownedByCurrentUser
-        );
-
-    let classes =
-        "bg-emerald-500 hover:bg-emerald-600";
-
-    let label =
-        "Available";
-
-    if (
-        seat.status === "HELD" &&
-        seat.ownedByCurrentUser
-    ) {
-
-        classes =
-            "bg-blue-500 hover:bg-blue-600";
-
-        label =
-            "Yours";
+    if (selected || yours) {
+        label = selected ? "Selected" : "Your hold";
+        seatClass = "seat-selected";
+    } else if (heldByOthers) {
+        label = "Temporarily Held";
+        seatClass = "seat-held";
+    } else if (seat.status === "CONFIRMED") {
+        label = "Occupied";
+        seatClass = "seat-occupied";
     }
 
-    else if (
-        seat.status === "HELD"
-    ) {
-
-        classes =
-            "bg-amber-500";
-
-        label =
-            "Held";
-    }
-
-    else if (
-        seat.status === "CONFIRMED"
-    ) {
-
-        classes =
-            "bg-red-500";
-
-        label =
-            "Booked";
-    }
+    const numberDisplay = seat.seatNumber.replace(/^[A-Za-z]+/, "") || seat.seatNumber;
 
     return (
-
         <button
-
-            disabled={disabled}
-
-            onClick={() =>
-                onClick(seat)
-            }
-
-            className={`
-                ${classes}
-
-                h-24
-                rounded-xl
-
-                text-white
-
-                p-3
-
-                flex
-                flex-col
-                justify-between
-
-                transition
-                duration-200
-
-                disabled:cursor-not-allowed
-                disabled:opacity-80
-            `}
+            type="button"
+            disabled={occupied && !yours && !selected}
+            title={`Row ${seat.rowNumber}, Seat ${seat.seatNumber} · ${label} · ${formatCurrency(seat.price)}`}
+            onClick={() => onClick(seat)}
+            className={cn(
+                "relative flex h-8 w-8 min-w-8 items-center justify-center rounded-[7px] text-[10px] font-semibold tracking-tight transition-all duration-200 select-none",
+                "focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+                seatClass
+            )}
+            aria-label={`Seat ${seat.seatNumber}, ${label}`}
         >
-
-            <div
-                className="
-                text-left
-                font-bold
-                "
-            >
-                {seat.seatNumber}
-            </div>
-
-            <div
-                className="
-                text-left
-                text-xs
-                "
-            >
-                ₹{seat.price}
-            </div>
-
-            <div
-                className="
-                text-left
-                text-[10px]
-                opacity-90
-                "
-            >
-                {label}
-            </div>
-
+            {numberDisplay}
+            {selected && (
+                <span className="absolute -top-1 -right-1 flex size-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary-foreground opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-white" />
+                </span>
+            )}
         </button>
-
     );
 };
 
