@@ -1,49 +1,65 @@
-version: '3.9'
 
 services:
-
   postgres:
     image: postgres:17
     container_name: booking-postgres
-
+    restart: unless-stopped
     environment:
       POSTGRES_DB: bookingdb
       POSTGRES_USER: bookinguser
       POSTGRES_PASSWORD: BookingPassword123!
-
     ports:
       - "5432:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookinguser -d bookingdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   redis:
     image: redis:7
     container_name: booking-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    networks:
+      - booking-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   booking-app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: booking-app
+    restart: on-failure
     ports:
       - "8080:8080"
-
     depends_on:
-      - postgres
-      - redis
-
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       DB_URL: jdbc:postgresql://postgres:5432/bookingdb
       DB_USERNAME: bookinguser
       DB_PASSWORD: BookingPassword123!
-
       REDIS_HOST: redis
       REDIS_PORT: 6379
-
-    volumes:
-      - ./src/main/resources/application.yaml:/app/application.yaml
+    networks:
+      - booking-network
 
 volumes:
-
   postgres_data:
+
+networks:
+  booking-network:
+    name: bookingsystem_booking-network
+    driver: bridge

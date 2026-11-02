@@ -41,7 +41,7 @@ public class RedisSeatHoldService {
                                     objectMapper.writeValueAsString(
                                             hold
                                     ),
-                                    Duration.ofMinutes(10)
+                                    Duration.ofSeconds(30)
                             );
 
             return Boolean.TRUE.equals(
